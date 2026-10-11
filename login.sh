@@ -3,7 +3,7 @@
 # Uso:  ./login.sh <usuario> <clave> <codigo>
 set -euo pipefail
 
-BASE="https://chl-52a7cde5-32e0-43ef-9ce2-1df8131f1325-veltra-bank.softwareseguro.com.ar"
+BASE="https://chl-8385f7f2-ef19-460a-a633-d25c900f1721-veltra-bank.softwareseguro.com.ar"
 
 if [ "$#" -ne 3 ]; then
   echo "uso: $0 <usuario> <clave> <codigo>" >&2
